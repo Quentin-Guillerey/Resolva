@@ -116,3 +116,27 @@ def test_sme_approval_writes_manual_audit_row():
     # and manual (from the approval we just did).
     assert any(r["Validation Process"] == "manual" for r in rows)
     assert any(r["Validation Process"] == "auto" for r in rows)
+
+
+def test_ai_fallback_accepts_department_names():
+    # Regression: the layer-2 guess is a department NAME; "IT", "Technical
+    # Support", and "Sales" previously fell through to General.
+    from resolva.classifier import classify
+    for name in ["IT", "Technical Support", "Sales", "billing"]:
+        c = classify({"description": "xyzzy unmatchable text", "resolution": ""},
+                     ai_fn=lambda t, n=name: n)
+        assert c["department"].lower() == name.lower(), c
+        assert c["classifier_used_ai"] is True
+
+
+def test_rejection_writes_audit_row_and_keeps_summaries():
+    _reset()
+    _load_demo()
+    pending = store.list_pending()[0]
+    ingestion.reject_review(pending["id"], "CI SME")
+    e = store.get_entry(pending["id"])
+    assert e["status"] == "rejected"
+    assert e["summary_problem"] == pending["summary_problem"]  # not blanked
+    rows = audit.read_audit()
+    assert any(r["Additional Comments"].startswith("REJECTED by CI SME")
+               for r in rows)
