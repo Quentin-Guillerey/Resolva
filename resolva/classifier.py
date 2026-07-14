@@ -85,8 +85,17 @@ def classify(ticket: dict, ai_fn=None) -> dict:
     department, ranked = _match_department(blob)
     used_ai = False
     if department is None and ai_fn is not None:
-        guess = ai_fn(blob) or ""
-        department, ranked = _match_department(guess)
+        guess = (ai_fn(blob) or "").strip()
+        # The AI replies with a department NAME, so match it against the known
+        # department names first (case-insensitive); only fall back to keyword
+        # matching if the reply isn't a clean name. Without the name check,
+        # guesses of "IT", "Technical Support", and "Sales" could never match.
+        for dept in DEPARTMENT_KEYWORDS:
+            if guess.lower() == dept.lower():
+                department, ranked = dept, [dept]
+                break
+        if department is None:
+            department, ranked = _match_department(guess)
         used_ai = department is not None
     if department is None:
         department = "General"

@@ -107,4 +107,18 @@ def approve_review(entry_id: int, problem: str, resolution: str, reviewed_by: st
 
 
 def reject_review(entry_id: int, reviewed_by: str):
-    store.update_review(entry_id, "", "", reviewed_by, "rejected")
+    """SME rejects a queued entry: keep its summaries for the trail and write
+    a 'manual' audit row marked REJECTED, so the trail shows every decision."""
+    e = store.get_entry(entry_id)
+    store.update_review(entry_id, e["summary_problem"], e["summary_resolution"],
+                        reviewed_by, "rejected")
+    audit.write_audit({
+        "ticket_number": e["ticket_number"],
+        "account_number": e["account_number"],
+        "description": e["summary_problem"],
+        "resolution": e["summary_resolution"],
+        "time_to_resolve": e["time_to_resolve"],
+        "stakeholders": e["stakeholders"],
+        "validation_process": "manual",
+        "comments": f"REJECTED by {reviewed_by}. {e['classifier_reason']}",
+    })

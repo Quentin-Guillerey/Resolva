@@ -1,11 +1,14 @@
 """
-Audit log — append-only CSV, written simultaneously with every KB entry
-(whether auto-published or SME-approved).
+Audit log — append-only CSV, written for every SME decision and every
+auto-publish (approvals and rejections both leave a row).
 
 Reuses the toolkit's CSV audit structure, with the columns Resolva's spec
 requires. The CSV lives in the per-user data directory, separate from the
-SQLite knowledge base, so the trail is a plain, portable, tamper-evident
+SQLite knowledge base, so the trail is a plain, portable, append-only
 file an auditor can open in Excel without touching the app.
+
+A failed audit write raises: for an audit-ready tool, silently continuing
+without the trail would be worse than stopping the operator.
 """
 
 import csv
@@ -39,14 +42,11 @@ def write_audit(row: dict) -> None:
         row.get("validation_process", ""),
         row.get("comments", ""),
     ]
-    try:
-        with open(path, "a", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            if not exists:
-                writer.writerow(COLUMNS)
-            writer.writerow(record)
-    except OSError as e:
-        print(f"[audit] failed to write CSV: {e}")
+    with open(path, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if not exists:
+            writer.writerow(COLUMNS)
+        writer.writerow(record)
 
 
 def read_audit() -> list:
