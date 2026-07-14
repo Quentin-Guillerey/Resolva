@@ -40,7 +40,7 @@ ticket and:
      legal-adjacent waits in a queue for a department expert to check and
      approve. **Every legal-touching case is reviewed, no exceptions.**
 5. **Logs it.** An append-only CSV audit row is written the moment an entry is
-   published — automatically or by an SME — recording ticket number, date,
+   decided — auto-published, SME-approved, or SME-rejected — recording ticket number, date,
    sanitized account, description, resolution, time to resolve, stakeholders,
    whether validation was auto or manual, and comments.
 
