@@ -79,6 +79,20 @@ you want to ship to — PyInstaller doesn't cross-compile, so build the Windows
 `.exe` on Windows. (Same antivirus/SmartScreen caveats apply to an unsigned
 internal build; check with IT before wide rollout.)
 
+**Verified:** built and run end-to-end on Windows 10 (Python 3.14,
+PyInstaller 6.21) — full demo walkthrough passed on the packaged build.
+
+**Notes for demo use:**
+
+- The browser **is** the interface — the app has no window of its own. The
+  executable starts a local server silently and opens your default browser.
+- Closing the browser tab does **not** stop the app; end the Resolva process in
+  Task Manager when you're done. (An in-app Quit button is *roadmap*.)
+- Double-clicking the executable again starts a second instance on another
+  port. (A single-instance guard is *roadmap*.)
+- If port 5000 is taken — by another app, or macOS AirPlay — the launcher picks
+  a free port automatically and opens the browser there.
+
 ---
 
 ## Optional integrations (all off by default)
@@ -104,6 +118,11 @@ folder, so they survive app updates.
 | Knowledge base entries | SQLite (one file) | Needs to be searched, filtered, and edited during review |
 | Audit trail | append-only CSV | A plain file an auditor can open in Excel, kept deliberately separate from the KB |
 | Per-user config | JSON | Per-machine credentials, never bundled or shared |
+| Error log | `resolva_errors.log` | File-based logging — a windowed build has no console to print to |
+
+The dev run (`python app.py`) and the packaged executable share this same
+per-user folder, so your data carries over between the two and survives
+rebuilds and app updates.
 
 ---
 
@@ -181,6 +200,7 @@ system that extends that idea.
 - Production-grade PII scrubbing on ingestion (demo data is pre-sanitized).
 - Wider account-number space / mapping table to remove collision risk at scale.
 - Asana / Zapier auto-routing for approved follow-ups (notification half is built).
+- Single-instance guard and in-app Quit button for the desktop launcher.
 - Measured outcomes once piloted: review load, auto vs manual split, audit coverage.
 
 ---
